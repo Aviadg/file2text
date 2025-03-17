@@ -209,10 +209,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📧 Contact
 
-Your Name - your.email@example.com
-
 Project Link: [https://github.com/Aviadg/file2text](https://github.com/Aviadg/file2text)
 
 ---
 
-Made with ❤️ by [Your Name]
+Made with ❤️ by [Aviad]
