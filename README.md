@@ -53,7 +53,7 @@ file2text utilizes a combination of direct text extraction and OCR technologies 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/file2text.git
+   git clone https://github.com/Aviadg/file2text.git
    cd file2text
    ```
 
@@ -211,7 +211,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 Your Name - your.email@example.com
 
-Project Link: [https://github.com/yourusername/file2text](https://github.com/yourusername/file2text)
+Project Link: [https://github.com/Aviadg/file2text](https://github.com/Aviadg/file2text)
 
 ---
 
