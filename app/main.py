@@ -1,6 +1,7 @@
 import os
 import uuid
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Security, Depends
+from fastapi.security.api_key import APIKeyHeader, APIKey
 from fastapi.responses import JSONResponse
 from typing import List, Optional
 import logging
@@ -8,10 +9,8 @@ import mimetypes
 from extractors.pdf_extractor import extract_text_from_pdf
 from extractors.doc_extractor import extract_text_from_doc
 from extractors.image_extractor import extract_text_from_image
-# Add these new imports
 from pydantic import BaseModel
 import base64
-
 
 # Configure logging
 logging.basicConfig(
@@ -27,10 +26,26 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# API Key configuration
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=True)
+
+# Get API key from environment variable
+API_KEY = os.getenv("API_KEY")
+if not API_KEY:
+    raise ValueError("API_KEY environment variable not set")
+
+async def get_api_key(api_key_header: str = Security(api_key_header)):
+    if api_key_header == API_KEY:
+        return api_key_header
+    raise HTTPException(
+        status_code=403,
+        detail="Invalid API Key"
+    )
+
 # Ensure upload directory exists
 UPLOAD_DIR = os.path.join(os.getcwd(), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 
 # Define models for base64 data
 class Base64FileData(BaseModel):
@@ -42,7 +57,10 @@ class BatchBase64Data(BaseModel):
     files: List[Base64FileData]
 
 @app.post("/extract-text-base64/", response_class=JSONResponse)
-async def extract_text_base64(file_data: Base64FileData):
+async def extract_text_base64(
+    file_data: Base64FileData,
+    api_key: APIKey = Depends(get_api_key)
+):
     """
     Extract text from base64-encoded file data
     """
@@ -112,7 +130,10 @@ async def save_upload_file(upload_file: UploadFile) -> str:
     return file_path
 
 @app.post("/extract-text/", response_class=JSONResponse)
-async def extract_text(file: UploadFile = File(...)):
+async def extract_text(
+    file: UploadFile = File(...),
+    api_key: APIKey = Depends(get_api_key)
+):
     """
     Extract text from the uploaded file
     """
@@ -147,7 +168,10 @@ async def extract_text(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 @app.post("/batch-extract/", response_class=JSONResponse)
-async def batch_extract_text(files: List[UploadFile] = File(...)):
+async def batch_extract_text(
+    files: List[UploadFile] = File(...),
+    api_key: APIKey = Depends(get_api_key)
+):
     """
     Extract text from multiple uploaded files
     """
@@ -190,5 +214,5 @@ async def batch_extract_text(files: List[UploadFile] = File(...)):
     return {"results": results}
 
 @app.get("/")
-def read_root():
+async def read_root(api_key: APIKey = Depends(get_api_key)):
     return {"message": "Text Extraction API is running. Use /extract-text/, /extract-text-base64/ or /batch-extract/ endpoints."}
